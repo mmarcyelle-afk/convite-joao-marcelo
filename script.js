@@ -37,31 +37,41 @@ const musicToggle = document.getElementById("musicToggle");
 bgMusic.volume = 0.5;
 const MUSIC_SILENCE_OFFSET = 1.8; // pula o trechinho mudo do início do MP3
 
-function resumeOnInteract() {
-  bgMusic.currentTime = MUSIC_SILENCE_OFFSET;
-  bgMusic.play().catch(() => {});
-  ["click", "touchstart", "keydown"].forEach((evt) =>
-    document.removeEventListener(evt, resumeOnInteract)
-  );
+// Função única e segura pra iniciar a música (evita chamadas duplicadas
+// conflitando entre si, que causavam o "liga e já pausa" no celular).
+let musicStarting = false;
+function startMusic() {
+  if (musicStarting || !bgMusic.paused) return;
+  musicStarting = true;
+  if (bgMusic.currentTime < MUSIC_SILENCE_OFFSET) {
+    bgMusic.currentTime = MUSIC_SILENCE_OFFSET;
+  }
+  bgMusic
+    .play()
+    .then(() => {
+      musicToggle.textContent = "🔊";
+    })
+    .catch(() => {})
+    .finally(() => {
+      musicStarting = false;
+    });
 }
 
-function playFromOffset() {
-  bgMusic.currentTime = MUSIC_SILENCE_OFFSET;
-  bgMusic.play().catch(() => {
-    // Autoplay com som bloqueado pelo navegador: toca assim que houver
-    // qualquer primeiro toque/clique na página (ainda sem precisar mutar).
-    ["click", "touchstart", "keydown"].forEach((evt) =>
-      document.addEventListener(evt, resumeOnInteract, { once: true })
-    );
-  });
+// Tenta tocar sozinho assim que possível
+function tryAutoplay() {
+  startMusic();
 }
-
-// HAVE_FUTURE_DATA (3) garante que já dá pra buscar a posição sem resetar
 if (bgMusic.readyState >= 3) {
-  playFromOffset();
+  tryAutoplay();
 } else {
-  bgMusic.addEventListener("canplay", playFromOffset, { once: true });
+  bgMusic.addEventListener("canplay", tryAutoplay, { once: true });
 }
+
+// Autoplay com som é bloqueado pelo navegador até a pessoa tocar na tela.
+// Um único gatilho ("click") cobre tanto toque no celular quanto clique no
+// computador, sem duplicar com "touchstart" (que causava o conflito).
+document.addEventListener("click", startMusic, { once: true });
+document.addEventListener("keydown", startMusic, { once: true });
 
 bgMusic.addEventListener("ended", () => {
   bgMusic.currentTime = MUSIC_SILENCE_OFFSET;
@@ -70,8 +80,7 @@ bgMusic.addEventListener("ended", () => {
 
 musicToggle.addEventListener("click", () => {
   if (bgMusic.paused) {
-    bgMusic.play().catch(() => {});
-    musicToggle.textContent = "🔊";
+    startMusic();
   } else {
     bgMusic.pause();
     musicToggle.textContent = "🔇";
