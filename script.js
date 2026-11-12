@@ -11,6 +11,9 @@ const introVideo = document.getElementById("introVideo");
 const introVid = document.getElementById("introVid");
 const introFade = document.getElementById("introFade");
 const skipIntro = document.getElementById("skipIntro");
+// A marca d'água do vídeo fica na faixa de cima — em vez de tampar com algo
+// por cima, o próprio vídeo é ampliado e deslocado pra cortar essa parte
+// (ver .intro-video video no style.css).
 
 let introEnded = false;
 let introFading = false;

@@ -70,9 +70,13 @@ img{max-width:100%;display:block;}
   position:fixed;inset:0;z-index:1000;
   background:#fff;
   display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
 }
 .intro-video.hide{display:none;}
-.intro-video video{width:100%;height:100%;object-fit:contain;}
+.intro-video video{
+  width:100%;height:100%;object-fit:contain;
+  transform:scale(1.22) translateY(-9%);
+}
 .intro-fade{
   position:absolute;inset:0;
   background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.55), transparent 40%), linear-gradient(160deg,var(--blue-xlight) 0%, var(--blue-light) 55%, var(--blue) 100%);
