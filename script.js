@@ -338,7 +338,7 @@ async function sendRSVP(status) {
   rsvpForm.hidden = true;
   thanksMsg.hidden = false;
   if (status === "Confirmado") {
-    thanksText.textContent = `Obrigado por confirmar, ${primeiroNome}! Vai ser demais te ver na festa do João Marcelo! 🏁💙`;
+    thanksText.textContent = `Obrigado por confirmar, ${primeiroNome}! Vai ser uma alegria ter você conosco nesse dia tão especial! 🏁`;
     if (!prefersReducedMotion) launchConfetti(80);
   } else {
     thanksText.textContent = `Que pena que não vai poder vir, ${primeiroNome}! Obrigado por avisar, vamos sentir sua falta. 💙`;
