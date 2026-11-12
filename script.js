@@ -184,24 +184,29 @@ revealEls.forEach((el) => io.observe(el));
 // Animação de "chegada" do carrinho feita quadro a quadro (em vez de poucos
 // pontos fixos do CSS), com uma onda que vai perdendo força naturalmente —
 // fica parecido com o carro derrapando de leve até estacionar, sem saltos.
+let carAnimRunId = 0;
 function animateCarArrival(el) {
-  const duration = 1700;
+  const duration = 1900;
   const start = performance.now();
-  const wobbleCycles = 2.4;
-  const maxSwayDeg = 9;
-  const maxSwayPx = 26;
+  const runId = ++carAnimRunId; // se chamar de novo no meio, a execução antiga para sozinha
+  // Uma curva única e aberta, tipo "S" (entra de um lado, cruza o centro,
+  // assenta do outro) em vez de vários zigues-zagues picados.
+  const maxSwayDeg = 13;
+  const maxSwayPx = 46;
 
   function frame(now) {
+    if (runId !== carAnimRunId) return;
     const p = Math.min((now - start) / duration, 1);
     const settle = 1 - Math.pow(1 - p, 3); // easeOutCubic: cresce rápido e assenta suave
-    const decay = Math.pow(1 - p, 1.8); // a derrapagem vai sumindo com o tempo
-    const wave = Math.sin(p * wobbleCycles * Math.PI * 2);
+    // Envelope suave (smoothstep) em vez de potência crua, pra não "pontuar"
+    const envelope = 1 - p * p * (3 - 2 * p);
+    const wave = Math.sin(p * Math.PI * 1.15 + 0.15);
 
-    const scale = 0.14 + settle * 0.86;
-    const translateY = (1 - settle) * 72;
-    const translateX = wave * maxSwayPx * decay;
-    const rotate = wave * maxSwayDeg * decay;
-    const opacity = Math.min(p / 0.1, 1);
+    const scale = 0.05 + settle * 0.95;
+    const translateY = (1 - settle) * 60;
+    const translateX = wave * maxSwayPx * envelope;
+    const rotate = wave * maxSwayDeg * envelope;
+    const opacity = Math.min(p / 0.12, 1);
 
     el.style.transform = `translateY(${translateY}px) translateX(${translateX}px) scale(${scale}) rotate(${rotate}deg)`;
     el.style.opacity = opacity;
@@ -214,6 +219,39 @@ function animateCarArrival(el) {
     }
   }
   requestAnimationFrame(frame);
+}
+
+// Repete o pulinho do boneco do "Confirme sua presença" sempre que a pessoa
+// tocar/clicar ou passar o mouse nele.
+const joaoMascot = document.querySelector(".joao-mascot");
+if (joaoMascot) {
+  const replayHop = () => {
+    joaoMascot.classList.remove("hop-now");
+    void joaoMascot.offsetWidth; // força o navegador a "esquecer" a animação anterior
+    joaoMascot.classList.add("hop-now");
+  };
+  joaoMascot.addEventListener("click", replayHop);
+  joaoMascot.addEventListener("mouseenter", replayHop);
+  joaoMascot.addEventListener("touchstart", replayHop, { passive: true });
+  joaoMascot.addEventListener("animationend", (e) => {
+    if (e.animationName === "hop") joaoMascot.classList.remove("hop-now");
+  });
+}
+
+// Balancinha no carrinho sempre que a pessoa tocar/clicar ou passar o mouse.
+const carArriveImg = document.querySelector(".car-arrive");
+if (carArriveImg) {
+  const replayWiggle = () => {
+    carArriveImg.classList.remove("wiggle-now");
+    void carArriveImg.offsetWidth;
+    carArriveImg.classList.add("wiggle-now");
+  };
+  carArriveImg.addEventListener("click", replayWiggle);
+  carArriveImg.addEventListener("mouseenter", replayWiggle);
+  carArriveImg.addEventListener("touchstart", replayWiggle, { passive: true });
+  carArriveImg.addEventListener("animationend", (e) => {
+    if (e.animationName === "car-wiggle") carArriveImg.classList.remove("wiggle-now");
+  });
 }
 
 // ========= BARRA DE PROGRESSO / CARRINHO LATERAL =========

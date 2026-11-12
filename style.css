@@ -248,11 +248,21 @@ img{max-width:100%;display:block;}
 }
 .car-arrive.reveal{
   opacity:0;
-  transform:scale(.15) translateY(70px);
+  transform:scale(.05) translateY(60px);
   transition:none;
 }
 .car-arrive.reveal.visible{
   opacity:1;
+  cursor:pointer;
+}
+.car-arrive.wiggle-now{animation:car-wiggle .6s ease;}
+@keyframes car-wiggle{
+  0%{transform:rotate(0deg) translateY(0);}
+  20%{transform:rotate(-6deg) translateY(-2px);}
+  40%{transform:rotate(5deg) translateY(0);}
+  60%{transform:rotate(-3deg) translateY(-1px);}
+  80%{transform:rotate(2deg) translateY(0);}
+  100%{transform:rotate(0deg) translateY(0);}
 }
 .gift-img{
   max-width:min(66vw,260px);margin:0 auto 20px;
@@ -262,8 +272,9 @@ img{max-width:100%;display:block;}
 .joao-mascot{
   max-width:min(62vw,260px);margin:0 auto 6px;
   filter:drop-shadow(0 14px 16px rgba(0,0,0,.16));
+  cursor:pointer;
 }
-.joao-mascot.visible{animation:hop .9s ease 1;}
+.joao-mascot.visible,.joao-mascot.hop-now{animation:hop .9s ease 1;}
 @keyframes hop{
   0%{transform:translateY(0);}
   30%{transform:translateY(-18px);}
