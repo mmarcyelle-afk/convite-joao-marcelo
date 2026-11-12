@@ -29,6 +29,7 @@ function finishIntro() {
 function endIntro() {
   if (introFading || introEnded) return;
   introFading = true;
+  introVid.pause(); // trava o quadro da fumaça aqui, pra não "vazar" a cena seguinte
   introFade.classList.add("show");
   setTimeout(finishIntro, INTRO_FADE_MS);
 }
