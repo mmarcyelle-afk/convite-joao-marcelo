@@ -163,6 +163,25 @@ function updateCountdown() {
 updateCountdown();
 setInterval(updateCountdown, 1000);
 
+// Pulinho do boneco do "Confirme sua presença" — usado tanto na primeira
+// vez que ele aparece na tela quanto sempre que a pessoa tocar/clicar/passar
+// o mouse nele depois.
+const joaoMascot = document.querySelector(".joao-mascot");
+function replayHop() {
+  if (!joaoMascot) return;
+  joaoMascot.classList.remove("hop-now");
+  void joaoMascot.offsetWidth; // força o navegador a "esquecer" a animação anterior
+  joaoMascot.classList.add("hop-now");
+}
+if (joaoMascot) {
+  joaoMascot.addEventListener("click", replayHop);
+  joaoMascot.addEventListener("mouseenter", replayHop);
+  joaoMascot.addEventListener("touchstart", replayHop, { passive: true });
+  joaoMascot.addEventListener("animationend", (e) => {
+    if (e.animationName === "hop") joaoMascot.classList.remove("hop-now");
+  });
+}
+
 // ========= SCROLL REVEAL =========
 const revealEls = document.querySelectorAll(".reveal");
 const io = new IntersectionObserver(
@@ -172,6 +191,9 @@ const io = new IntersectionObserver(
         entry.target.classList.add("visible");
         if (entry.target.classList.contains("car-arrive") && !prefersReducedMotion) {
           animateCarArrival(entry.target);
+        }
+        if (entry.target === joaoMascot && !prefersReducedMotion) {
+          replayHop();
         }
         io.unobserve(entry.target);
       }
@@ -185,10 +207,12 @@ revealEls.forEach((el) => io.observe(el));
 // pontos fixos do CSS), com uma onda que vai perdendo força naturalmente —
 // fica parecido com o carro derrapando de leve até estacionar, sem saltos.
 let carAnimRunId = 0;
+let carArrivalDone = false;
 function animateCarArrival(el) {
   const duration = 1900;
   const start = performance.now();
   const runId = ++carAnimRunId; // se chamar de novo no meio, a execução antiga para sozinha
+  carArrivalDone = false;
   // Uma curva única e aberta, tipo "S" (entra de um lado, cruza o centro,
   // assenta do outro) em vez de vários zigues-zagues picados.
   const maxSwayDeg = 13;
@@ -216,32 +240,18 @@ function animateCarArrival(el) {
     } else {
       el.style.transform = "";
       el.style.opacity = "";
+      carArrivalDone = true;
     }
   }
   requestAnimationFrame(frame);
 }
 
-// Repete o pulinho do boneco do "Confirme sua presença" sempre que a pessoa
-// tocar/clicar ou passar o mouse nele.
-const joaoMascot = document.querySelector(".joao-mascot");
-if (joaoMascot) {
-  const replayHop = () => {
-    joaoMascot.classList.remove("hop-now");
-    void joaoMascot.offsetWidth; // força o navegador a "esquecer" a animação anterior
-    joaoMascot.classList.add("hop-now");
-  };
-  joaoMascot.addEventListener("click", replayHop);
-  joaoMascot.addEventListener("mouseenter", replayHop);
-  joaoMascot.addEventListener("touchstart", replayHop, { passive: true });
-  joaoMascot.addEventListener("animationend", (e) => {
-    if (e.animationName === "hop") joaoMascot.classList.remove("hop-now");
-  });
-}
-
-// Balancinha no carrinho sempre que a pessoa tocar/clicar ou passar o mouse.
+// Balancinha no carrinho sempre que a pessoa tocar/clicar ou passar o mouse —
+// mas só depois que a chegada inicial terminar, pra não cortar ela no meio.
 const carArriveImg = document.querySelector(".car-arrive");
 if (carArriveImg) {
   const replayWiggle = () => {
+    if (!carArrivalDone) return;
     carArriveImg.classList.remove("wiggle-now");
     void carArriveImg.offsetWidth;
     carArriveImg.classList.add("wiggle-now");
