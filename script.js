@@ -212,7 +212,7 @@ revealEls.forEach((el) => io.observe(el));
 let carAnimRunId = 0;
 let carArrivalDone = false;
 function animateCarArrival(el) {
-  const duration = 1900;
+  const duration = 3200;
   const start = performance.now();
   const runId = ++carAnimRunId; // se chamar de novo no meio, a execução antiga para sozinha
   carArrivalDone = false;
@@ -321,7 +321,7 @@ async function sendRSVP(status) {
   isSubmitting = true;
   confirmBtn.disabled = true;
   declineBtn.disabled = true;
-  confirmBtn.textContent = "Enviando...";
+  if (status === "Confirmado") confirmBtn.textContent = "Confirmando...";
 
   const payload = {
     nome,
@@ -329,6 +329,31 @@ async function sendRSVP(status) {
     total: 1 + acompanhantes.length,
     status,
   };
+
+  // Mostra "Confirmando..." rapidinho antes de trocar de tela, sem precisar
+  // esperar a planilha responder (o Google Apps Script às vezes demora).
+  const primeiroNome = nome.split(" ")[0];
+  await new Promise((r) => setTimeout(r, 600));
+
+  rsvpForm.hidden = true;
+  thanksMsg.hidden = false;
+  if (status === "Confirmado") {
+    thanksText.textContent = `Obrigado por confirmar, ${primeiroNome}! Vai ser demais te ver na festa do João Marcelo! 🏁💙`;
+    if (!prefersReducedMotion) launchConfetti(80);
+  } else {
+    thanksText.textContent = `Que pena que não vai poder vir, ${primeiroNome}! Obrigado por avisar, vamos sentir sua falta. 💙`;
+  }
+
+  // Limpa o formulário (nome, acompanhantes e botão voltam ao estado inicial)
+  document.getElementById("nome").value = "";
+  acompanhantesList.querySelectorAll('input[name="acompanhante"]').forEach((input, i) => {
+    if (i === 0) input.value = "";
+    else input.remove();
+  });
+  confirmBtn.textContent = "Confirmar presença";
+  confirmBtn.disabled = false;
+  declineBtn.disabled = false;
+  isSubmitting = false;
 
   try {
     if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) {
@@ -344,15 +369,6 @@ async function sendRSVP(status) {
     }
   } catch (err) {
     console.error("Erro ao enviar RSVP:", err);
-  }
-
-  rsvpForm.hidden = true;
-  thanksMsg.hidden = false;
-  if (status === "Confirmado") {
-    thanksText.textContent = "Obrigado por confirmar! Vai ser demais te ver na festa do João Marcelo! 🏁💙";
-    if (!prefersReducedMotion) launchConfetti(80);
-  } else {
-    thanksText.textContent = "Que pena que não vai poder vir! Obrigado por avisar, vamos sentir sua falta. 💙";
   }
 }
 
