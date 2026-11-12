@@ -9,10 +9,14 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 // ========= VÍDEO DE ABERTURA =========
 const introVideo = document.getElementById("introVideo");
 const introVid = document.getElementById("introVid");
+const introFade = document.getElementById("introFade");
 const skipIntro = document.getElementById("skipIntro");
 
 let introEnded = false;
-function endIntro() {
+let introFading = false;
+const INTRO_FADE_MS = 1100;
+
+function finishIntro() {
   if (introEnded) return;
   introEnded = true;
   introVideo.classList.add("hide");
@@ -20,16 +24,32 @@ function endIntro() {
   introVideo.remove();
 }
 
-// Encerra um pouquinho antes do fim real, pra não mostrar o
-// finalzinho preto que sobra nos últimos instantes do vídeo.
-const INTRO_END_MARGIN = 0.9;
+// Em vez de cortar seco, a fumaça azul da carta vai tomando a tela toda
+// até virar o mesmo azul da capa do site — a transição fica contínua.
+function endIntro() {
+  if (introFading || introEnded) return;
+  introFading = true;
+  introFade.classList.add("show");
+  setTimeout(finishIntro, INTRO_FADE_MS);
+}
+
+function skipIntroNow() {
+  // Pular vai direto, sem precisar esperar o fade.
+  if (introFading || introEnded) return;
+  finishIntro();
+}
+
+// Mostra só a parte em que ele abre a carta, deixando a fumaça se espalhar
+// mais antes de cortar, e em câmera um pouco mais lenta pra não ficar brusco.
+introVid.playbackRate = 0.65;
+const INTRO_CUT_TIME = 4.3;
 introVid.addEventListener("timeupdate", () => {
-  if (introVid.duration && introVid.currentTime >= introVid.duration - INTRO_END_MARGIN) {
+  if (introVid.currentTime >= INTRO_CUT_TIME) {
     endIntro();
   }
 });
 introVid.addEventListener("ended", endIntro);
-skipIntro.addEventListener("click", endIntro);
+skipIntro.addEventListener("click", skipIntroNow);
 
 // ========= MÚSICA DE FUNDO (toca desde o início, contínua) =========
 const bgMusic = document.getElementById("bgMusic");
@@ -85,6 +105,25 @@ musicToggle.addEventListener("click", () => {
     bgMusic.pause();
     musicToggle.textContent = "🔇";
   }
+});
+
+// Pausa a música quando a pessoa sai da aba/site (troca de app, minimiza,
+// ou clica num link que abre o WhatsApp/Maps em outra aba) e retoma se voltar.
+let musicWasPlayingBeforeHide = false;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    musicWasPlayingBeforeHide = !bgMusic.paused;
+    bgMusic.pause();
+  } else if (musicWasPlayingBeforeHide) {
+    bgMusic.play().catch(() => {});
+  }
+});
+
+document.querySelectorAll('a[target="_blank"]').forEach((link) => {
+  link.addEventListener("click", () => {
+    bgMusic.pause();
+    musicToggle.textContent = "🔇";
+  });
 });
 
 // ========= ABRIR CONVITE =========

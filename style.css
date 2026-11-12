@@ -73,6 +73,14 @@ img{max-width:100%;display:block;}
 }
 .intro-video.hide{display:none;}
 .intro-video video{width:100%;height:100%;object-fit:contain;}
+.intro-fade{
+  position:absolute;inset:0;
+  background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.55), transparent 40%), linear-gradient(160deg,var(--blue-xlight) 0%, var(--blue-light) 55%, var(--blue) 100%);
+  opacity:0;
+  transition:opacity 1.1s ease;
+  pointer-events:none;
+}
+.intro-fade.show{opacity:1;}
 .intro-btn{
   position:absolute;border:none;border-radius:999px;
   background:rgba(255,255,255,.92);color:var(--navy);
