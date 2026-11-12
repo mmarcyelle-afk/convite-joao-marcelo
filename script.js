@@ -170,6 +170,9 @@ const io = new IntersectionObserver(
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add("visible");
+        if (entry.target.classList.contains("car-arrive") && !prefersReducedMotion) {
+          animateCarArrival(entry.target);
+        }
         io.unobserve(entry.target);
       }
     });
@@ -177,6 +180,41 @@ const io = new IntersectionObserver(
   { threshold: 0.15 }
 );
 revealEls.forEach((el) => io.observe(el));
+
+// Animação de "chegada" do carrinho feita quadro a quadro (em vez de poucos
+// pontos fixos do CSS), com uma onda que vai perdendo força naturalmente —
+// fica parecido com o carro derrapando de leve até estacionar, sem saltos.
+function animateCarArrival(el) {
+  const duration = 1700;
+  const start = performance.now();
+  const wobbleCycles = 2.4;
+  const maxSwayDeg = 9;
+  const maxSwayPx = 26;
+
+  function frame(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const settle = 1 - Math.pow(1 - p, 3); // easeOutCubic: cresce rápido e assenta suave
+    const decay = Math.pow(1 - p, 1.8); // a derrapagem vai sumindo com o tempo
+    const wave = Math.sin(p * wobbleCycles * Math.PI * 2);
+
+    const scale = 0.14 + settle * 0.86;
+    const translateY = (1 - settle) * 72;
+    const translateX = wave * maxSwayPx * decay;
+    const rotate = wave * maxSwayDeg * decay;
+    const opacity = Math.min(p / 0.1, 1);
+
+    el.style.transform = `translateY(${translateY}px) translateX(${translateX}px) scale(${scale}) rotate(${rotate}deg)`;
+    el.style.opacity = opacity;
+
+    if (p < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      el.style.transform = "";
+      el.style.opacity = "";
+    }
+  }
+  requestAnimationFrame(frame);
+}
 
 // ========= BARRA DE PROGRESSO / CARRINHO LATERAL =========
 const trackCar = document.getElementById("trackCar");
